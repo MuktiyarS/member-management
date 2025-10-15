@@ -24,6 +24,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -101,7 +103,7 @@ class MemberServiceImplTest {
 
     // Test: Create member
     @Test
-    void test_createMember_ShouldSaveAndReturnResponse() {
+    void test_createMember_ShouldSaveAndReturnResponse() throws BusinessServiceException {
         Member saved = request.toEntity();
         when(memberRepository.save(any(Member.class))).thenReturn(saved);
 
@@ -110,6 +112,19 @@ class MemberServiceImplTest {
         assertThat(response).isNotNull();
         assertThat(response.getFirstName()).isEqualTo(request.getFirstName());
         verify(memberRepository).save(any(Member.class));
+    }
+
+    @Test
+    void test_createMember_ShouldReturnError() throws BusinessServiceException {
+        Member saved = request.toEntity();
+        when(memberRepository.existsByEmail(request.getEmail())).thenReturn(true);
+        when(memberRepository.save(any(Member.class))).thenReturn(saved);
+
+        assertThatThrownBy(() -> memberService.createMember(request))
+                .isInstanceOf(BusinessServiceException.class)
+                .hasMessageContaining("Email already exists");
+
+        verify(memberRepository, never()).save(any(Member.class));
     }
 
     // Test: Update member
@@ -157,4 +172,110 @@ class MemberServiceImplTest {
 
         verify(memberRepository, never()).deleteById(any());
     }
+
+    @Test
+    void testReturnAllMembers_whenNoFiltersProvided() {
+        Pageable pageable = PageRequest.of(0, 10);
+        // given
+
+        Page<Member> page = new PageImpl<>(List.of(member));
+
+        when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+
+        // when
+        Page<MemberResponse> result = memberService.getAllMembers(null, null, pageable);
+
+        // then
+        assertEquals(1, result.getTotalElements());
+        assertEquals("John", result.getContent().get(0).getFirstName());
+        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void testFilterByFirstName_whenFirstNameProvided() {
+        Pageable pageable = PageRequest.of(0, 10);
+        // given
+
+        Page<Member> page = new PageImpl<>(List.of(member));
+
+        when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+
+        // when
+        Page<MemberResponse> result = memberService.getAllMembers("Ali", null, pageable);
+
+        // then
+        assertEquals(1, result.getTotalElements());
+        assertEquals("John", result.getContent().get(0).getFirstName());
+        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void testFilterByLastName_whenLastNameProvided() {
+        Pageable pageable = PageRequest.of(0, 10);
+        // given
+
+        Page<Member> page = new PageImpl<>(List.of(member));
+
+        when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+
+        // when
+        Page<MemberResponse> result = memberService.getAllMembers(null, "John", pageable);
+
+        // then
+        assertEquals(1, result.getTotalElements());
+        assertEquals("John", result.getContent().get(0).getFirstName());
+        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void testFilterByFirstNameAndLastName_whenBothProvided() {
+        Pageable pageable = PageRequest.of(0, 10);
+        // given
+
+        Page<Member> page = new PageImpl<>(List.of(member));
+
+        when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+
+        // when
+        Page<MemberResponse> result = memberService.getAllMembers("Car", "Mill", pageable);
+
+        // then
+        assertEquals(1, result.getTotalElements());
+        assertEquals("John", result.getContent().get(0).getFirstName());
+        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void testReturnEmptyPage_whenRepositoryReturnsEmpty() {
+        Pageable pageable = PageRequest.of(0, 10);
+        // given
+        when(memberRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(Page.empty(pageable));
+
+        // when
+        Page<MemberResponse> result = memberService.getAllMembers("NonExistent", null, pageable);
+
+        // then
+        assertTrue(result.isEmpty());
+        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void testIgnoreBlankInputs() {
+        Pageable pageable = PageRequest.of(0, 10);
+        // given
+
+        Page<Member> page = new PageImpl<>(List.of(member));
+
+        when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+
+        // when
+        Page<MemberResponse> result = memberService.getAllMembers("   ", "", pageable);
+
+        // then
+        assertEquals(1, result.getTotalElements());
+        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+
 }

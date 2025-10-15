@@ -1,11 +1,18 @@
 package com.surest.member.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.surest.member.entity.Member;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -24,6 +31,10 @@ public class MemberRequest {
     @Size(max = 255, message = "Email must be less than 255 characters")
     private String email;
 
+    @JsonFormat(pattern = "MM/dd/yyyy")
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @DateTimeFormat(pattern = "MM/dd/yyyy")
     @NotNull(message = "Date of birth is required")
     @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
@@ -34,8 +45,8 @@ public class MemberRequest {
                 .lastName(this.lastName)
                 .email(this.email)
                 .dateOfBirth(this.dateOfBirth)
-                .createdAt(LocalDate.now().atStartOfDay())
-                .updatedAt(LocalDate.now().atStartOfDay())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 }

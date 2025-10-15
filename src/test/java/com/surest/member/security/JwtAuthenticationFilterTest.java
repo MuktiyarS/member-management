@@ -83,6 +83,18 @@ class JwtAuthenticationFilterTest {
         verifyNoInteractions(jwtUtil, customUserDetailsService);
     }
 
+    //  Test: missing Authorization header
+    @Test
+    void test_doFilterInternal_ShouldSkip_WhenInvalidAuthorizationHeader() throws ServletException, IOException {
+        when(request.getHeader("Authorization")).thenReturn(" InvalidHeader ");
+
+        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+        verifyNoInteractions(jwtUtil, customUserDetailsService);
+    }
+
     //  Test: invalid token
     @Test
     void test_doFilterInternal_ShouldNotAuthenticate_WhenInvalidToken() throws ServletException, IOException {

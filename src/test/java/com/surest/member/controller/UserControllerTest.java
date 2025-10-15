@@ -43,7 +43,7 @@ class UserControllerTest {
         List<UserResponse> users = List.of(new UserResponse(UUID.randomUUID(), "user1", "user1@example.com", "Password", LocalDate.now(), Set.of("ROLE_USER")));
         Mockito.when(userService.getAllUsers()).thenReturn(users);
 
-        mockMvc.perform(get("/users"))
+        mockMvc.perform(get("/api/v1/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(users.size()))
                 .andExpect(jsonPath("$[0].username").value("user1"));
@@ -53,7 +53,7 @@ class UserControllerTest {
     void test_getAllUsers_ShouldReturnEmptyList() throws Exception {
         Mockito.when(userService.getAllUsers()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/users"))
+        mockMvc.perform(get("/api/v1/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
@@ -64,9 +64,20 @@ class UserControllerTest {
         UserResponse user = new UserResponse(id, "user1", "user1@example.com", "Password", LocalDate.now(), Set.of("ROLE_USER"));
         Mockito.when(userService.getUserById(id)).thenReturn(user);
 
-        mockMvc.perform(get("/users/{id}", id))
+        mockMvc.perform(get("/api/v1/users/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user1"));
+    }
+
+    @Test
+    void test_getUserById_ShouldReturnError_WhenInvalidType() throws Exception {
+        UUID id = UUID.randomUUID();
+        UserResponse user = new UserResponse(id, "user1", "user1@example.com", "Password", LocalDate.now(), Set.of("ROLE_USER"));
+        Mockito.when(userService.getUserById(id)).thenReturn(user);
+
+        mockMvc.perform(get("/api/v1/users/{id}", 123))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid parameter type: id"));
     }
 
     @Test
@@ -74,7 +85,7 @@ class UserControllerTest {
         UUID id = UUID.randomUUID();
         Mockito.when(userService.getUserById(id)).thenThrow(new UsernameNotFoundException("User not found"));
 
-        mockMvc.perform(get("/users/{id}", id))
+        mockMvc.perform(get("/api/v1/users/{id}", id))
                 .andExpect(status().isNotFound());
     }
 
@@ -85,7 +96,7 @@ class UserControllerTest {
 
         Mockito.when(userService.createUser(Mockito.any())).thenReturn(response);
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -94,7 +105,7 @@ class UserControllerTest {
 
     @Test
     void test_createUser_ShouldReturn400_WhenValidationFails() throws Exception {
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"\",\"email\":\"invalidemail\"}"))
                 .andExpect(status().isBadRequest())
@@ -110,7 +121,7 @@ class UserControllerTest {
         Mockito.when(userService.createUser(Mockito.any()))
                 .thenThrow(new BusinessServiceException("User already exists", HttpStatus.CONFLICT));
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
@@ -125,7 +136,7 @@ class UserControllerTest {
 
         Mockito.when(userService.updateUser(Mockito.eq(id), Mockito.any())).thenReturn(response);
 
-        mockMvc.perform(put("/users/{id}", id)
+        mockMvc.perform(put("/api/v1/users/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -136,7 +147,7 @@ class UserControllerTest {
     void test_updateUser_ShouldReturn400_WhenValidationFails() throws Exception {
         UUID id = UUID.randomUUID();
 
-        mockMvc.perform(put("/users/{id}", id)
+        mockMvc.perform(put("/api/v1/users/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"\",\"email\":\"invalidemail\"}"))
                 .andExpect(status().isBadRequest())
@@ -152,7 +163,7 @@ class UserControllerTest {
         Mockito.when(userService.updateUser(Mockito.eq(id), Mockito.any()))
                 .thenThrow(new UsernameNotFoundException("User not found"));
 
-        mockMvc.perform(put("/users/{id}", id)
+        mockMvc.perform(put("/api/v1/users/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -165,7 +176,7 @@ class UserControllerTest {
         // Assume void method, no exception thrown
         Mockito.doNothing().when(userService).deleteUser(id);
 
-        mockMvc.perform(delete("/users/{id}", id))
+        mockMvc.perform(delete("/api/v1/users/{id}", id))
                 .andExpect(status().isNoContent());
     }
 
@@ -174,20 +185,21 @@ class UserControllerTest {
         UUID id = UUID.randomUUID();
         Mockito.doThrow(new UsernameNotFoundException("User not found")).when(userService).deleteUser(id);
 
-        mockMvc.perform(delete("/users/{id}", id))
+        mockMvc.perform(delete("/api/v1/users/{id}", id))
                 .andExpect(status().isNotFound());
     }
+
     @Test
     void createUser_ShouldReturn400_WhenUsernameMissing() throws Exception {
         String invalidRequest = """
-            {
-                "email": "user@example.com",
-                "password": "password123",
-                "roles": ["USER"]
-            }
-        """;
+                    {
+                        "email": "user@example.com",
+                        "password": "password123",
+                        "roles": ["USER"]
+                    }
+                """;
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidRequest))
                 .andExpect(status().isBadRequest())
@@ -197,15 +209,15 @@ class UserControllerTest {
     @Test
     void createUser_ShouldReturn400_WhenEmailInvalid() throws Exception {
         String invalidRequest = """
-            {
-                "username": "john_doe",
-                "email": "not-an-email",
-                "password": "password123",
-                "roles": ["USER"]
-            }
-        """;
+                    {
+                        "username": "john_doe",
+                        "email": "not-an-email",
+                        "password": "password123",
+                        "roles": ["USER"]
+                    }
+                """;
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidRequest))
                 .andExpect(status().isBadRequest())
@@ -215,14 +227,14 @@ class UserControllerTest {
     @Test
     void createUser_ShouldReturn400_WhenRolesMissing() throws Exception {
         String invalidRequest = """
-            {
-                "username": "john_doe",
-                "email": "john@example.com",
-                "password": "password123"
-            }
-        """;
+                    {
+                        "username": "john_doe",
+                        "email": "john@example.com",
+                        "password": "password123"
+                    }
+                """;
 
-        mockMvc.perform(post("/users")
+        mockMvc.perform(post("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidRequest))
                 .andExpect(status().isBadRequest())

@@ -50,7 +50,7 @@ class AuthControllerTest {
         when(authService.login(any(LoginRequest.class))).thenReturn(response);
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -63,7 +63,7 @@ class AuthControllerTest {
         LoginRequest invalidRequest = new LoginRequest("john_doe", "");
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -75,7 +75,7 @@ class AuthControllerTest {
         LoginRequest invalidRequest = new LoginRequest("", "gdg345");
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -87,7 +87,7 @@ class AuthControllerTest {
         LoginRequest invalidRequest = new LoginRequest("  ", "  ");
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -101,7 +101,7 @@ class AuthControllerTest {
                 .thenThrow(new UsernameNotFoundException("User not found"));
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isNotFound());
@@ -115,7 +115,7 @@ class AuthControllerTest {
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isUnauthorized());
@@ -129,7 +129,7 @@ class AuthControllerTest {
                 .thenThrow(new InsufficientAuthenticationException("Insufficient Authentication"));
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isForbidden());
@@ -143,7 +143,7 @@ class AuthControllerTest {
                 .thenThrow(new RuntimeException("Runtime Exception"));
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest());
@@ -157,7 +157,7 @@ class AuthControllerTest {
                 .thenThrow(new BusinessServiceException("Runtime Exception", HttpStatus.UNAUTHORIZED));
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isUnauthorized());
@@ -170,7 +170,7 @@ class AuthControllerTest {
         when(authService.login(any(LoginRequest.class))).thenReturn(null);
 
         // when + then
-        mockMvc.perform(post("/auth/login2")
+        mockMvc.perform(post("/api/v1/auth/login2")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isInternalServerError());
@@ -184,7 +184,7 @@ class AuthControllerTest {
                 .thenThrow(new BusinessServiceException("Invalid credentials"));
 
         // when + then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError())

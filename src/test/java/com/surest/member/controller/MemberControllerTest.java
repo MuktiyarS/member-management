@@ -79,7 +79,7 @@ class MemberControllerTest {
         when(memberService.getAllMembers(any(), any(), any()))
                 .thenReturn(page);
 
-        ResultActions perform = mockMvc.perform(get("/members")
+        ResultActions perform = mockMvc.perform(get("/api/v1/members")
                 .param("page", "0")
                 .param("size", "5")
                 .param("sort", "lastName,asc"));
@@ -103,7 +103,7 @@ class MemberControllerTest {
                 .thenReturn(pageResponse);
 
         // when + then
-        mockMvc.perform(get("/members")
+        mockMvc.perform(get("/api/v1/members")
                         .param("page", "0")
                         .param("size", "10")
                         .param("sort", "lastName,asc")
@@ -115,7 +115,7 @@ class MemberControllerTest {
 
     @Test
     void getAllMembers_ShouldReturn403_WhenNoAuth() throws Exception {
-        mockMvc.perform(get("/members"))
+        mockMvc.perform(get("/api/v1/members"))
                 .andExpect(status().isForbidden());
     }
 
@@ -126,7 +126,7 @@ class MemberControllerTest {
     void getMemberById_ShouldReturnMember_WhenExists() throws Exception {
         when(memberService.getMemberById(memberId)).thenReturn(validResponse);
 
-        mockMvc.perform(get("/members/{id}", memberId))
+        mockMvc.perform(get("/api/v1/members/{id}", memberId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("jon@Example.com"));
     }
@@ -137,7 +137,7 @@ class MemberControllerTest {
         when(memberService.getMemberById(any(UUID.class)))
                 .thenThrow(new BusinessServiceException("Member not found", HttpStatus.NOT_FOUND));
 
-        ResultActions perform = mockMvc.perform(get("/members/{id}", memberId));
+        ResultActions perform = mockMvc.perform(get("/api/v1/members/{id}", memberId));
         perform.andExpect(status().isNotFound());
     }
 
@@ -148,7 +148,7 @@ class MemberControllerTest {
     void createMember_ShouldReturn201_WhenValidRequest() throws Exception {
         when(memberService.createMember(any(MemberRequest.class))).thenReturn(validResponse);
 
-        mockMvc.perform(post("/members")
+        mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated())
@@ -165,7 +165,7 @@ class MemberControllerTest {
                 .dateOfBirth(LocalDate.now().plusDays(1))
                 .build();
 
-        mockMvc.perform(post("/members")
+        mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalid)))
                 .andExpect(status().isBadRequest());
@@ -174,7 +174,7 @@ class MemberControllerTest {
     @Test
     @WithMockUser(roles = {"USER"})
     void createMember_ShouldReturn403_WhenUserRole() throws Exception {
-        mockMvc.perform(post("/members")
+        mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest())
@@ -189,7 +189,7 @@ class MemberControllerTest {
         when(memberService.updateMember(eq(memberId), any(MemberRequest.class)))
                 .thenReturn(validResponse);
 
-        mockMvc.perform(put("/members/{id}", memberId)
+        mockMvc.perform(put("/api/v1/members/{id}", memberId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isOk())
@@ -202,7 +202,7 @@ class MemberControllerTest {
         when(memberService.updateMember(any(UUID.class), any(MemberRequest.class)))
                 .thenThrow(new BusinessServiceException("Member not found", HttpStatus.NOT_FOUND));
 
-        mockMvc.perform(put("/members/{id}", memberId)
+        mockMvc.perform(put("/api/v1/members/{id}", memberId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isNotFound());
@@ -211,7 +211,7 @@ class MemberControllerTest {
     @Test
     @WithMockUser(roles = {"USER"})
     void updateMember_ShouldReturn400_WhenUserRole() throws Exception {
-        ResultActions perform = mockMvc.perform(put("/members/{id}", memberId)
+        ResultActions perform = mockMvc.perform(put("/api/v1/members/{id}", memberId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validRequest)));
         perform.andExpect(status().isBadRequest());
@@ -226,7 +226,7 @@ class MemberControllerTest {
     void deleteMember_ShouldReturn204_WhenSuccess() throws Exception {
         doNothing().when(memberService).deleteMember(memberId);
 
-        mockMvc.perform(delete("/members/{id}", memberId))
+        mockMvc.perform(delete("/api/v1/members/{id}", memberId))
                 .andExpect(status().isNoContent());
 
         verify(memberService, times(1)).deleteMember(memberId);
@@ -238,14 +238,14 @@ class MemberControllerTest {
         doThrow(new BusinessServiceException("Member not found", HttpStatus.NOT_FOUND))
                 .when(memberService).deleteMember(memberId);
 
-        mockMvc.perform(delete("/members/{id}", memberId))
+        mockMvc.perform(delete("/api/v1/members/{id}", memberId))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @WithMockUser(roles = {"USER"})
     void deleteMember_ShouldReturn403_WhenUserRole() throws Exception {
-        mockMvc.perform(delete("/members/{id}", memberId))
+        mockMvc.perform(delete("/api/v1/members/{id}", memberId))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Access Denied"));
     }

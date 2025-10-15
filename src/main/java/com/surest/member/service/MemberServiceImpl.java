@@ -49,8 +49,10 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Transactional
-    public MemberResponse createMember(MemberRequest request) {
-
+    public MemberResponse createMember(MemberRequest request) throws BusinessServiceException {
+        if (memberRepository.existsByEmail(request.getEmail())) {
+            throw new BusinessServiceException("Email already exists", HttpStatus.CONFLICT);
+        }
         return memberRepository.save(request.toEntity()).toResponse();
     }
 

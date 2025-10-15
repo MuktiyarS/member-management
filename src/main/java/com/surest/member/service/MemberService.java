@@ -13,7 +13,7 @@ public interface MemberService {
 
     MemberResponse getMemberById(UUID id) throws BusinessServiceException;
 
-    MemberResponse createMember(MemberRequest memberRequest);
+    MemberResponse createMember(MemberRequest memberRequest) throws BusinessServiceException;
 
     MemberResponse updateMember(UUID id, MemberRequest updatedMember) throws BusinessServiceException;
 

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/members")
+@RequestMapping("/api/v1/members")
 @AllArgsConstructor
 public class MemberController {
 
@@ -51,7 +51,7 @@ public class MemberController {
     // CREATE — only ADMIN
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MemberResponse> createMember(@Valid @RequestBody MemberRequest memberRequest) {
+    public ResponseEntity<MemberResponse> createMember(@Valid @RequestBody MemberRequest memberRequest) throws BusinessServiceException {
         return ResponseEntity.status(HttpStatus.CREATED).body(memberService.createMember(memberRequest));
     }
 

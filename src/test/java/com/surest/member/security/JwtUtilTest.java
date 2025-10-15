@@ -42,6 +42,13 @@ class JwtUtilTest {
     }
 
     @Test
+    void test_validateToken_ShouldReturnFalse_ForBlankToken() {
+        String invalidToken = "   ";
+        boolean valid = jwtUtil.validateToken(invalidToken);
+        assertThat(valid).isFalse();
+    }
+
+    @Test
     void test_extractUsername_ShouldThrow_ForMalformedToken() {
         String invalidToken = "abc.def.ghi";
         assertThatThrownBy(() -> jwtUtil.extractUsername(invalidToken))
