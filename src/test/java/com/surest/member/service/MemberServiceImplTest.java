@@ -7,6 +7,8 @@ import com.surest.member.exception.BusinessServiceException;
 import com.surest.member.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -115,7 +117,7 @@ class MemberServiceImplTest {
     }
 
     @Test
-    void test_createMember_ShouldReturnError() throws BusinessServiceException {
+    void test_createMember_ShouldReturnError() {
         Member saved = request.toEntity();
         when(memberRepository.existsByEmail(request.getEmail())).thenReturn(true);
         when(memberRepository.save(any(Member.class))).thenReturn(saved);
@@ -173,75 +175,26 @@ class MemberServiceImplTest {
         verify(memberRepository, never()).deleteById(any());
     }
 
-    @Test
-    void testReturnAllMembers_whenNoFiltersProvided() {
+    // Parameterized Test: Get all members with various filter combinations
+    @ParameterizedTest
+    @CsvSource({
+            ",,John",                   // no filters
+            "John,,John",                // first name only
+            ",Doe,John",               // last name only
+            "John,Doe,John"              // both
+    })
+    void testGetAllMembersWithCsv(String firstName, String lastName, String resultFirstName) {
         Pageable pageable = PageRequest.of(0, 10);
-        // given
-
         Page<Member> page = new PageImpl<>(List.of(member));
 
         when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        // when
-        Page<MemberResponse> result = memberService.getAllMembers(null, null, pageable);
+        Page<MemberResponse> result = memberService.getAllMembers(firstName, lastName, pageable);
 
-        // then
-        assertEquals(1, result.getTotalElements());
-        assertEquals("John", result.getContent().get(0).getFirstName());
-        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
-    }
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertEquals(resultFirstName, result.getContent().get(0).getFirstName());
 
-    @Test
-    void testFilterByFirstName_whenFirstNameProvided() {
-        Pageable pageable = PageRequest.of(0, 10);
-        // given
 
-        Page<Member> page = new PageImpl<>(List.of(member));
-
-        when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-
-        // when
-        Page<MemberResponse> result = memberService.getAllMembers("Ali", null, pageable);
-
-        // then
-        assertEquals(1, result.getTotalElements());
-        assertEquals("John", result.getContent().get(0).getFirstName());
-        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
-    }
-
-    @Test
-    void testFilterByLastName_whenLastNameProvided() {
-        Pageable pageable = PageRequest.of(0, 10);
-        // given
-
-        Page<Member> page = new PageImpl<>(List.of(member));
-
-        when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-
-        // when
-        Page<MemberResponse> result = memberService.getAllMembers(null, "John", pageable);
-
-        // then
-        assertEquals(1, result.getTotalElements());
-        assertEquals("John", result.getContent().get(0).getFirstName());
-        verify(memberRepository).findAll(any(Specification.class), eq(pageable));
-    }
-
-    @Test
-    void testFilterByFirstNameAndLastName_whenBothProvided() {
-        Pageable pageable = PageRequest.of(0, 10);
-        // given
-
-        Page<Member> page = new PageImpl<>(List.of(member));
-
-        when(memberRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-
-        // when
-        Page<MemberResponse> result = memberService.getAllMembers("Car", "Mill", pageable);
-
-        // then
-        assertEquals(1, result.getTotalElements());
-        assertEquals("John", result.getContent().get(0).getFirstName());
         verify(memberRepository).findAll(any(Specification.class), eq(pageable));
     }
 

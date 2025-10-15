@@ -75,7 +75,7 @@ class AuthServiceTest {
         assertThat(response.getToken()).isEqualTo("jwt-token-123");
 
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtUtil).generateToken(eq("john"), eq(List.of("ROLE_USER")));
+        verify(jwtUtil).generateToken("john", List.of("ROLE_USER"));
     }
 
     @Test

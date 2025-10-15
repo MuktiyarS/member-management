@@ -22,6 +22,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    public static final String TIMESTAMP = "timestamp";
+
     // 🔹 Handle validation errors (@Valid DTOs)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(
@@ -29,7 +31,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         Map<String, Object> error = new HashMap<>();
-        error.put("timestamp", LocalDateTime.now());
+        error.put(TIMESTAMP, LocalDateTime.now());
         error.put("status", HttpStatus.BAD_REQUEST.value());
         error.put("error", "Validation Failed");
         error.put("path", request.getRequestURI());
@@ -101,14 +103,14 @@ public class GlobalExceptionHandler {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(ex.getHttpStatus(), ex.getMessage());
         problemDetail.setType(URI.create(request.getContextPath()));
         problemDetail.setTitle(ex.getHttpStatus().getReasonPhrase());
-        problemDetail.setProperty("timestamp", LocalDateTime.now());
+        problemDetail.setProperty(TIMESTAMP, LocalDateTime.now());
         return problemDetail;
     }
 
     // 🧱 Helper method with request path
     private ResponseEntity<Map<String, Object>> buildError(HttpStatus status, String message, HttpServletRequest request) {
         Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
+        body.put(TIMESTAMP, LocalDateTime.now());
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
