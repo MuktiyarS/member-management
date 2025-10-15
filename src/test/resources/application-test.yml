@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: member-management
+  cache:
+    type: none
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:   # leave empty if no password
+      timeout: 60000 # 60 seconds
+      time-to-live: 43200000  # 12 hours
+      enabled: false
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000 # 30 seconds
+      connection-timeout: 20000 # 20 seconds
+      max-lifetime: 1800000 # 30 minutes
+      validation-timeout: 5000 # 5 seconds
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show-sql: true
+        generate_statistics: true
+        dialect: org.hibernate.dialect.H2Dialect
+  sql:
+    init:
+      mode: never
+  flyway:
+    enabled: false
+jwt:
+  secret: "test-secret-key-which-is-long-enough-32-bytes"
+  expiration: 3600000
+server:
+  port: 8082
+logging:
+  level:
+    org:
+      hibernate:
+        stat: DEBUG
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui
